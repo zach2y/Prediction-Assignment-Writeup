@@ -1,0 +1,111 @@
+---
+title: "Prediction-Assignment-Writeup"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Intro 
+The goal of this project is to predict the manner in which the subjects did the exercise. This is the "classe" variable in the training set.
+
+The "classe" are:
+- exactly according to the specification (Class A)
+- throwing the elbows to the front (Class B)
+- lifting the dumbbell only halfway (Class C)
+- lowering the dumbbell only halfway (Class D)
+- throwing the hips to the front (Class E)
+
+## Load Libraries
+```{r}
+library(caret)
+library(randomForest)
+library(rpart)
+library(rpart.plot)
+```
+
+## Download Files
+```{r}
+url_train = 'https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv'
+url_test = 'https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv'
+
+download.file(url_train, 'train.csv')
+download.file(url_test, 'test.csv')
+```
+
+## Load Files
+```{r}
+train_set = read.csv('train.csv', na.strings=c("NA","#DIV/0!", ""))
+test_set = read.csv('test.csv', na.strings=c("NA","#DIV/0!", ""))
+```
+
+## Set seed
+```{r}
+set.seed(1909)
+```
+
+## Data Cleanup, convert classe to factor and Subset
+```{r}
+train_set <- train_set[,colSums(is.na(train_set)) == 0]
+test_set <- test_set[,colSums(is.na(test_set)) == 0]
+
+train_set$classe <- as.factor(train_set$classe)
+
+train_set <- train_set[,-c(1:7)]
+test_set <- test_set[,-c(1:7)]
+```
+
+## Splitting Data for cross-validation
+```{r}
+samples_cv <- createDataPartition(y=train_set$classe, p=0.75, list=FALSE)
+train_cv <- train_set[samples_cv, ] 
+test_cv <- train_set[-samples_cv, ]
+```
+
+## Prediction models
+
+## random forest 
+```{r}
+model_rf <- randomForest(classe ~ ., data=train_cv, method="class")
+predict_rf <- predict(model_rf, test_cv, type = "class")
+```
+
+```{r}
+confusionMatrix(predict_rf, test_cv$classe)
+```
+
+### Decision tree
+```{r}
+model_dt <- rpart(classe ~ ., data=train_cv, method="class")
+predict_dt <- predict(model_dt, test_cv, type = "class")
+```
+
+```{r}
+confusionMatrix(predict_dt, test_cv$classe)
+```
+
+## Summary
+
+The comparison of the confusion matrices shows that the RandomForest model performs better than the DecisionTree model and should therefore be selected.
+
+The RandmForest model has an accuracy of 0.9949 with a 95% confidence interval of (0.9925, 0.9967). The DecisionTree model has an accuracy of 0.742 with a 95% confidence interval of (0.7296, 0.7542).
+
+## Expected out-of-sample error
+The expected out-of-sample error is estimated at 0.005, or 0.5%. The expected out-of-sample error is calculated as 1 - accuracy for predictions made against the cross-validation set. Our Test data set comprises 20 cases. With an accuracy above 99% on our cross-validation data, we can expect that very few, or none, of the test samples will be missclassified.
+
+## Submission
+
+```{r}
+predict_sub <- predict(model_rf, test_set, type="class")
+predict_sub
+
+write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+write_files(predict_sub)
+```
