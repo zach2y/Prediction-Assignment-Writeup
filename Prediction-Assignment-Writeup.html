@@ -308,7 +308,7 @@ predict_dt &lt;- predict(model_dt, test_cv, type = &quot;class&quot;)</code></pr
 </div>
 <div id="expected-out-of-sample-error" class="section level2">
 <h2>Expected out-of-sample error</h2>
-<p>The expected out-of-sample error is estimated at 0.005, or 0.5%. The expected out-of-sample error is calculated as 1 - accuracy for predictions made against the cross-validation set. Our Test data set comprises 20 cases. With an accuracy above 99% on our cross-validation data, we can expect that very few, or none, of the test samples will be missclassified.</p>
+<p>The expected out-of-sample error is estimated at 0.005. The expected out-of-sample error is calculated via (1 - accuracy) the estimate of the cross-validation set. With an accuracy of 0.9949 in the RandomForest model on the cross-validation set, we can assume that only a few of the 20 cases in the test data set are misclassified.</p>
 </div>
 <div id="submission" class="section level2">
 <h2>Submission</h2>
